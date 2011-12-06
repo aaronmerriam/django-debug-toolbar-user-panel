@@ -61,6 +61,7 @@ File a bug
 
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
 
 from debug_toolbar.panels import DebugPanel
 
@@ -91,6 +92,12 @@ class UserPanel(DebugPanel):
         })
 
         return render_to_string('debug_toolbar_user_panel/panel.html', context)
+
+    def process_request(self, request):
+        force_secure = not getattr(settings, 'DEBUG_TOOLBAR_USER_PANEL_SECURE', False)
+        enabled = request.user.is_superuser or force_secure
+        if not 'debug_toolbar_user_panel_enabled' in request.session and enabled:
+            request.session['debug_toolbar_user_panel_enabled'] = True
 
     def process_response(self, request, response):
         self.request = request
